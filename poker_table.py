@@ -1,22 +1,9 @@
-import copy, math
+import subprocess, sys, math, cards
+
 
 # texas holdem simulator
 
-NEW_DECK = ['AS','2S','3S','4S','5S','6S','7S','8S','9S','10S','JS','QS','KS','AC','2C','3C','4C','5C','6C','7C','8C','9C','10C','JC','QC','KC','AH','2H','3H','4H','5H','6H','7H','8H','9H','10H','JH','QH','KH','AD','2D','3D','4D','5D','6D','7D','8D','9D','10D','JD','QD','KD',]
 MAX_PLAYERS = 10
-
-
-def validate_deck(deck):
-    if len(deck) == 52:
-        valid_deck = sorted(copy.deepcopy(NEW_DECK))
-        curr_deck = sorted(deck)
-
-        for i in range(52):
-            if valid_deck[i] != curr_deck[i]:
-                return False
-        return True
-
-    return False
 
 
 class Table:
@@ -26,55 +13,42 @@ class Table:
             self.table_size = table_size
         else:
             raise Exception(f'Player limit exceeded! Maximum players: {MAX_PLAYERS}')
-        self.deck = []
+
+        self.deck = cards.Cards()
         self.players = [] # list of player objects
         self.shared_cards = [] # aka community cards
         self.burnt_cards = []
+        self.pot = 0
+        self.button = 0  # index of player with button
         self.small_blind = 1
         self.big_blind = 2
-        self.pot = 0
-        self.button = 0 # index of player with button
         self.action = 1 # index of player with action (defaults to button + 1 at start of hand)
 
     def add_player(self, player):
         if len(self.players) < self.table_size:
             self.players.append(player)
         else:
-            raise Exception(f'Table full buddy...')
-
-    # WIP WIP WIP
-    def shuffle(self):
-        if not self.deck:
-            self.open_new_deck()
-
-        # scramble
-        # 3 rounds of randomness
-
-        # riffle x 2
-        # cut in half then pharoah
-        # add slight variance into pharoah so it isnt perfect all the time
-
-        # box cuts
-        # cut into four or five stacks and reverse order of stacks
-
-        # riffle
-        # cut in half then pharoah
-        # add slight variance into pharoah so it isnt perfect all the time
-
-        pass
-
-    def open_new_deck(self):
-        self.deck = copy.deepcopy(NEW_DECK)
+            print(f"Hey {player.name}, the table is full bud...")
 
     # WIP WIP WIP
     def update_equities(self):
-        # update hand equities of all players given current shared cards
+        # update hand equities and ranges of all players given current shared cards
         pass
 
     # WIP WIP WIP
     def betting_round(self):
         self.update_equities()
         # get action from all players starting from action index
+        # loop thru everyone starting w the action index
+        # skip anyine that folded or is out
+        for player in self.players:
+            if player.active:
+                action = player.act(self.players)
+                if action[0] == "fold":
+                    # remove player from round, make them inactive
+                    player.active = 0
+
+
         pass
 
     '''
@@ -138,9 +112,9 @@ class Table:
         self.button = (self.button + 1) % len(self.players)
 
     def play_one_hand(self, deck):
-        if validate_deck(deck):
+        if deck.validate_deck():
             self.deck = deck
-        self.shuffle()
+        self.deck.shuffle()
         self.deal_hole_cards() # pre-flop betting
         self.deal_shared(3) # deal flop
         self.deal_shared(1) # deal turn
@@ -150,22 +124,52 @@ class Table:
 
     # play n hands
     def play_hands(self, deck, n):
-        if validate_deck(deck):
-            self.deck = deck
         for i in range(n):
-            self.play_one_hand()
+            self.play_one_hand(deck)
         return self.deck
+
+    '''
+            table layout
+        
+            1   2   3   
+        0               4
+            7   6   5
+            
+    '''
 
     # WIP WIP WIP
     # print table to console (mainly for debugging)
     # every time a game is run you do not want to blow up the console
     def print_table(self):
+        with open("logs/game-0/shared_info.txt", "w") as output_file:
+            for a in range(100):
+                try:
+                    figlet_cmd = f"figlet \"Round {a}\""
+                    figlet_res = subprocess.run(figlet_cmd, shell=True, capture_output=True, text=True, check=True)
+                    output_file.write(figlet_res.stdout)
+                    if figlet_res.stderr:
+                        output_file.write("\nError Output:\n")
+                        output_file.write(figlet_res.stderr)
+
+                except Exception as e:
+                    print(f"An unexpected error ocurred: {e}")
+
+
         pass
 
     # WIP WIP WIP
     # creates a new log file of the game for x rounds with timestamps
     # flop turn and river are shown with betting in between
-    # this log will  be used to create visualizations
+    # this log will be used to create visualizations
     # csv file
     def create_game_log(self):
+        # each file be a game?
+        #
+        # each game contains these two csvs and will have 1:1 row correspondence for each round
+        # shared-info
+        # pot, community cards, deck
+        # each row will be a round
+        # player-info
+        # money, decicsion each round, cards, range, equity
+        # each row will be a round
         pass

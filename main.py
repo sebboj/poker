@@ -1,5 +1,11 @@
 import poker_table, poker_player
 
+# WIP WIP WIP
+# 3 WIP functions left in table
+# 1 WIP function left in player
+# 1 WIP functions left in cards
+# WIP WIP WIP
+
 if __name__ == '__main__':
     cool_table = poker_table.Table()
 
