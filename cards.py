@@ -53,6 +53,7 @@ class Cards:
         cut_point += random.randint(0, 2 * offset_amt)
 
         # take 0 and move to top, repeat 26 +/- var
+        # use : res.append(deque(itertools.islice(self.deck, idx, None)))
         for a in range(cut_point):
             temp = self.deck.popleft()
             self.deck.append(temp)
@@ -80,7 +81,22 @@ class Cards:
     def box_shuffle(self, var=0.08):
         # 3 cuts w variance
         # .25 idx then .33 idx then .5 idx all +- variance
-        pass
+        res = deque()
+        cards_left = 52
+
+        idx = int(cards_left * (.75 + var))
+        res.append(deque(itertools.islice(self.deck, idx, None)))
+        cards_left -= idx # FIX
+
+        idx = int(cards_left * (.66 + var))
+        res.append(deque(itertools.islice(self.deck, idx, None)))
+        cards_left -= idx # FIX
+
+        idx = int(cards_left * (.5 + var))
+        res.append(deque(itertools.islice(self.deck, idx, None)))
+        cards_left -= idx # FIX
+
+        return res
 
     def riffle_shuffle(self, var=0.08):
         left = deque(itertools.islice(self.deck, 0, 26))
